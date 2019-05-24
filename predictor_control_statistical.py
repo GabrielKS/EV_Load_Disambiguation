@@ -19,7 +19,10 @@ class PredictorControlStatistical(Predictor):
         pass
 
     def train(self, params, combined, load, households):
-        pass
+        watts_per_car = load.mean(axis="rows").sum()/(params["vehicles_L1"]+params["vehicles_L2"])
+        self.blocks_per_day = watts_per_car*1440/self.period
+        #I'll have to reverse the probability math below to get fraction_one_car from households
+        #Not immediately apparent how to get l2_threshold besides actually training
 
     def save(self):
         pass

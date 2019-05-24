@@ -36,7 +36,9 @@ def rmse_2d(a, b):
 def main():
     split = .25
     train, test = get_train_test(split)
-    prediction = predictor_control_statistical.PredictorControlStatistical(split, 30).predict(test["params"], test["combined"])
+    predictor = predictor_control_statistical.PredictorControlStatistical(split, 30)
+    predictor.train(train["params"], train["combined"], train["load"], train["households"])
+    prediction = predictor.predict(test["params"], test["combined"])
 
     test["households"].index = (test["households"])["Household"]
     test["households"].drop("Household", axis=1, inplace=True)
