@@ -1,0 +1,43 @@
+import get_input
+import pandas as pd
+from sklearn.model_selection import train_test_split
+import random
+import numpy as np
+import predictor_control_statistical
+
+def get_train_test(split):
+    seed = 1000
+    random.seed(a=seed)
+    np.random.seed(seed)
+
+    n_vehicles = len(pd.read_csv("raw_data/vehicles.csv"))
+    n_L1 = n_vehicles * 0.75 * 0.3
+    n_L2 = n_vehicles * 0.75 * 0.6
+    d_L1 = n_L1*0.05
+    d_L2 = n_L2*0.05
+    train = get_input.get_data(n_L1, d_L1, n_L2, d_L2, 3, 0)
+    test = get_input.get_data(n_L1, d_L1, n_L2, d_L2, 3, 1)
+
+    households = train["households"]["Household"]
+    training_households, testing_households = train_test_split(households, test_size=split)
+
+    train["combined"] = train["combined"][list(training_households)]
+    train["load"] = train["load"][list(training_households)]
+    train["households"] = train["households"].loc[train["households"]["Household"].isin(training_households)]
+
+    test["combined"] = test["combined"][list(testing_households)]
+    test["load"] = test["load"][list(testing_households)]
+    test["households"] = test["households"].loc[test["households"]["Household"].isin(testing_households)]
+    return train, test
+
+def main():
+    split = .25
+    train, test = get_train_test(split)
+    prediction = predictor_control_statistical.PredictorControlStatistical(split, 30).predict(test["params"], test["combined"])
+    print(prediction["load"])
+    print(test["load"])
+    print(prediction["households"])
+    print(test["households"])
+
+if __name__ == "__main__":
+    main()

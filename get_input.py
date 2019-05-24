@@ -33,7 +33,7 @@ def unpack_data(data):
 def get_data(vehicles_L1, error_L1, vehicles_L2, error_L2, timestep, random_seed=None, get_combined=True, get_load=True, get_households=True, get_params=True):
     combined, load, households, params = None, None, None, None
     if random_seed == None:
-        combined, load, households, params = unpack_data(simulate_data(vehicles_L1, vehicles_L2, timestep))
+        combined, load, households, params = unpack_data(simulate_data(vehicles_L1, error_L1, vehicles_L2, error_L2, timestep))
     else:
         path_combined = "simulated/combined_"+str(timestep)+"_"+str(vehicles_L1)+"_"+str(vehicles_L2)+"_"+str(random_seed)+".csv"
         path_load = "simulated/load_"+str(timestep)+"_"+str(vehicles_L1)+"_"+str(vehicles_L2)+"_"+str(random_seed)+".csv"
@@ -79,7 +79,8 @@ def load_resample(path, key, distribution, freq, vehicles_to_households):
 
 def simulate_data(vehicles_L1, error_L1, vehicles_L2, error_L2, timestep, random_seed=None):
     print("Simulating input from scratch…")
-    params = pd.Series({"vehicles_L1": vehicles_L1, "vehicles_L2": vehicles_L2, "error_L1": error_L1, "error_L2": error_L2})
+    vehicles_to_households = pd.read_csv("raw_data/vehicles.csv")
+    params = pd.Series({"vehicles_L1": vehicles_L1, "vehicles_L2": vehicles_L2, "vehicles_total": len(vehicles_to_households), "error_L1": error_L1, "error_L2": error_L2})
     random.seed(a=random_seed)
     vehicles_L1 += error_L1*(random.random()*2-1)
     vehicles_L2 += error_L2*(random.random()*2-1)
@@ -87,7 +88,6 @@ def simulate_data(vehicles_L1, error_L1, vehicles_L2, error_L2, timestep, random
     vehicles_L2 = int(round(vehicles_L2))
     vehicles_L1 = max(vehicles_L1, 0)
     vehicles_L2 = max(vehicles_L2, 0)
-    vehicles_to_households = pd.read_csv("raw_data/vehicles.csv")
     distribution = np.array(["L1"] * vehicles_L1 + ["L2"] * vehicles_L2 + ["Gas"] * (len(vehicles_to_households) - vehicles_L1 - vehicles_L2))
     random.shuffle(distribution)
 

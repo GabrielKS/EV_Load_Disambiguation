@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
 
 def print_summary(data):
     print("Data:")
@@ -26,10 +27,13 @@ print("Number of households with 5 cars: "+str(counts.count(5)))
 print("Number of households with 6 cars: "+str(counts.count(6)))
 print("Number of households with 7 cars: "+str(counts.count(7)))
 
-baseline = pd.read_csv("raw_data/Residential-Profiles.csv")
-load_L1 = pd.read_csv("raw_data/PEV-Profiles-L1.csv")
-load_L2 = pd.read_csv("raw_data/PEV-Profiles-L2.csv")
-print_summary(baseline)
-print_summary(load_L1)
-print_summary(load_L2)
-print(load_L1.loc[1704])
+# baseline = pd.read_csv("raw_data/Residential-Profiles.csv")
+# load_L1 = pd.read_csv("raw_data/PEV-Profiles-L1.csv")
+# load_L2 = pd.read_csv("raw_data/PEV-Profiles-L2.csv")
+# print_summary(baseline)
+# print_summary(load_L1)
+# print_summary(load_L2)
+# print(load_L1.loc[1704])
+
+plt.hist(counts)
+plt.show()
