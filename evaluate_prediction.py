@@ -30,14 +30,21 @@ def get_train_test(split):
     test["households"] = test["households"].loc[test["households"]["Household"].isin(testing_households)]
     return train, test
 
+def rmse_2d(a, b):
+    return ((b-a) ** 2).mean().mean() ** 0.5
+
 def main():
     split = .25
     train, test = get_train_test(split)
     prediction = predictor_control_statistical.PredictorControlStatistical(split, 30).predict(test["params"], test["combined"])
-    print(prediction["load"])
-    print(test["load"])
-    print(prediction["households"])
-    print(test["households"])
+
+    test["households"].index = (test["households"])["Household"]
+    test["households"].drop("Household", axis=1, inplace=True)
+
+    load_RMSE = rmse_2d(test["load"], prediction["load"])
+    households_RMSE = rmse_2d(test["households"], prediction["households"])
+    print(load_RMSE)
+    print(households_RMSE)
 
 if __name__ == "__main__":
     main()
