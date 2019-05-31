@@ -28,6 +28,13 @@ def main():
     plt.figure(2)
     plt.plot(hourly.index, hourly)
 
+    #Composite:
+    composite = seasonal.resample("h").ffill()
+    for time in composite.index:
+        composite.loc[time] = (composite.loc[time]+hourly.loc[time.hour])/2
+    plt.figure(3)
+    plt.plot(combined.index, combined, composite.index, composite)
+
     #TODO: Trends in each hour across seasons
 
     plt.show()

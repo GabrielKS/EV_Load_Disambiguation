@@ -4,6 +4,7 @@ from sklearn.model_selection import train_test_split
 import random
 import numpy as np
 import predictor_control_statistical
+import predictor_statistical_composite
 import predictor_statistical_daily
 import predictor_zero
 
@@ -55,7 +56,8 @@ def evaluate_prediction(predictor, data):
     print("\tHousehold RMSE: "+str(round(households_RMSE, 3)))
 
 def create_all_predictors():
-    return [predictor_statistical_daily.PredictorStatisticalDaily(1-split, 30), predictor_zero.PredictorZero(), predictor_control_statistical.PredictorControlStatistical(1-split, 30)]
+    # return [predictor_statistical_composite.PredictorStatisticalComposite(1-split, 30)]
+    return [predictor_zero.PredictorZero(), predictor_statistical_composite.PredictorStatisticalComposite(1-split, 30), predictor_statistical_daily.PredictorStatisticalDaily(1-split, 30), predictor_control_statistical.PredictorControlStatistical(1-split, 30)]
 
 def testSaveLoad(predictors):
     for predictor in predictors:

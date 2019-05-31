@@ -127,6 +127,6 @@ class PredictorControlStatistical(Predictor):
                         combined.at[sorted.index[j], index] -= power #Decrease the power available to the next car
                         car_consumption -= power    #Decrease the power needed to charge this car
                         j += 1  #Move to the next-highest timeslot
-        print("L1: "+str(households["L1"].sum()))
-        print("L2: "+str(households["L2"].sum()))
+        # print("L1: "+str(households["L1"].sum()))
+        # print("L2: "+str(households["L2"].sum()))
         return {"load": load, "households": households}
