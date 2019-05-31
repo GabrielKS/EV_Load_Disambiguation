@@ -8,8 +8,13 @@ from collections import OrderedDict
 # "households": The household-to-vehicle map. Output 2.
 # "params": Parameters. Secondary input.
 
+verbose = False
+
+def path_from(timestep, vehicles_L1, vehicles_L2, random_seed):
+    return str(timestep) + "_" + str(vehicles_L1) + "_" + str(vehicles_L2) + "_" + str(random_seed)
+
 def load_time_series(path):
-    print("loading")
+    if verbose: print("loading")
     var = pd.read_csv(path)
     var.index = pd.to_datetime(var["Time"])
     var.drop(columns="Time", inplace=True)
@@ -35,7 +40,7 @@ def get_data(vehicles_L1, error_L1, vehicles_L2, error_L2, timestep, random_seed
     if random_seed == None:
         combined, load, households, params = unpack_data(simulate_data(vehicles_L1, error_L1, vehicles_L2, error_L2, timestep))
     else:
-        path_combined = "simulated/combined_"+str(timestep)+"_"+str(vehicles_L1)+"_"+str(vehicles_L2)+"_"+str(random_seed)+".csv"
+        path_combined = "simulated/combined_"+path_from(timestep, vehicles_L1, vehicles_L2, random_seed)+".csv"
         path_load = "simulated/load_"+str(timestep)+"_"+str(vehicles_L1)+"_"+str(vehicles_L2)+"_"+str(random_seed)+".csv"
         path_households = "simulated/households_"+str(timestep)+"_"+str(vehicles_L1)+"_"+str(vehicles_L2)+"_"+str(random_seed)+".csv"
         path_params = "simulated/params_"+str(timestep)+"_"+str(vehicles_L1)+"_"+str(vehicles_L2)+"_"+str(random_seed)+".csv"
@@ -55,9 +60,9 @@ def get_data(vehicles_L1, error_L1, vehicles_L2, error_L2, timestep, random_seed
 def load_resample(path, key, distribution, freq, vehicles_to_households):
     var = load_time_series(path)
     var = var[vehicles_to_households["Vehicle"].iloc[distribution == key]] #Get rid of the data we don't need
-    print("fuzzing")
+    if verbose: print("fuzzing")
     for s in var:
-        print("\t"+s)
+        if verbose: print("\t"+s)
         col = var[s].copy()
         for i in range(0, len(col)-1):
             if col.iloc[i] == 0 and col.iloc[i+1] > 0:
@@ -74,11 +79,11 @@ def load_resample(path, key, distribution, freq, vehicles_to_households):
                 # col.iloc[i] = -2
         var[s] = col
     var = var.resample(freq).mean()
-    print(var)
+    if verbose: print(var)
     return var
 
 def simulate_data(vehicles_L1, error_L1, vehicles_L2, error_L2, timestep, random_seed=None):
-    print("Simulating input from scratch…")
+    if verbose: print("Simulating input from scratch…")
     vehicles_to_households = pd.read_csv("raw_data/vehicles.csv")
     params = pd.Series({"vehicles_L1": vehicles_L1, "vehicles_L2": vehicles_L2, "vehicles_total": len(vehicles_to_households), "error_L1": error_L1, "error_L2": error_L2})
     random.seed(a=random_seed)
@@ -101,13 +106,13 @@ def simulate_data(vehicles_L1, error_L1, vehicles_L2, error_L2, timestep, random
     if vehicles_L1 > 0: load_L1 = load_resample("raw_data/PEV-Profiles-L1.csv", "L1", distribution, freq, vehicles_to_households)
     if vehicles_L2 > 0: load_L2 = load_resample("raw_data/PEV-Profiles-L2.csv", "L2", distribution, freq, vehicles_to_households)
 
-    print("calculating")
+    if verbose: print("calculating")
     """
     for household_n in range(1, len(baseline+1)):
         household = "Household "+str(household_n)
         vehicle_ns = vehicles_to_households[vehicles_to_households["Household"] == household].index
         for vehicle_n in vehicle_ns:
-            print("\t"+str(vehicle_n))
+            if verbose: print("\t"+str(vehicle_n))
             if distribution[vehicle_n] == "L1": baseline[household] = baseline[household]+load_L1.iloc[vehicle_n]
             elif distribution[vehicle_n] == "L2": baseline[household] = baseline[household]+load_L2.iloc[vehicle_n]
     """

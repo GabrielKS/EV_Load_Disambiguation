@@ -1,31 +1,50 @@
 from predictor import Predictor
 import pandas as pd
-import numpy as np
 import utilities
 import sys
+import pickle
 
 class PredictorControlStatistical(Predictor):
     def __init__(self, subset, period):
-        #Tuneables:
+        #Tuneables (most tuned below):
         watts_per_car = (12000/1)*(30/100)*(1/8760)*(1000/1)    #(mi/yr)(kWh/mi)(yr/h)(W/kW)=W. Sources: https://www.immihelp.com/used-car-buying-tips/, https://en.wikipedia.org/wiki/Electric_car_energy_efficiency
         self.blocks_per_day = watts_per_car*1440/period    #This number is highly suspect. Next step would be to get it from the training data.
         self.fraction_one_car = .35  #A guess.
-        self.l2_threshold = 125  # Tune/train it! Depends on the time period too. Maybe use the threshold utility function.
+        self.l2_threshold = 125 # Tune/train it!
 
         self.subset = subset
         self.period = period
 
-    def load(self, path):
-        pass
+    @classmethod
+    def load(cls, path):
+        return pickle.load(open(path, "rb"))
 
     def train(self, params, combined, load, households):
         watts_per_car = load.mean(axis="rows").sum()/(params["vehicles_L1"]+params["vehicles_L2"])
         self.blocks_per_day = watts_per_car*1440/self.period
-        #I'll have to reverse the probability math below to get fraction_one_car from households
-        #Not immediately apparent how to get l2_threshold besides actually training
+        #I'll have to reverse the probability math to get fraction_one_car from households:
+        self.cars_L1 = params["vehicles_L1"]*self.subset
+        self.cars_L2 = params["vehicles_L2"]*self.subset
+        cars_total = params["vehicles_total"]*self.subset
+        households_total = len(combined.columns)
+        c = cars_total/households_total
+        e = (self.cars_L1+self.cars_L2)/cars_total
+        o3 = len(households[households["L1"]+households["L2"] == 3])
+        o2 = len(households[households["L1"]+households["L2"] == 2])
+        o1 = len(households[households["L1"]+households["L2"] == 1])
+        o0 = len(households[households["L1"]+households["L2"] == 0])
+        fractions = [-c+o3/e**3+2,
+                     -(3*(c-2)*e**4-3*(c-2)*e**3+(c-3)*e**2+o2)/(e**2*(3*e**2-3e+2)),
+                     (-c*(3*e**2-4*e+1)*e+6*e**3-6*e**2+o1)/(e**2*(3*e-2)),
+                     -(c*(e-1)**2*e-2*e**3+3*e**2+o1-1)/((e-1)*e**2)]
+        # print(fractions)
+        #For some reason only the second line is working right now. Ideally all four lines would work and I could take a weighted average.
+        self.fraction_one_car = fractions[1]
+        #Not immediately apparent how to get l2_threshold besides actually training. So I trained it manually, trying to get n_L1/n_L2 as close as possible to 0.5.
+        self.l2_threshold = 78
 
-    def save(self):
-        pass
+    def save(self, path):   #"predictor_control_statistical_"+str(round(self.cars_L1, 3))+"_"+str(round(self.cars_L2, 3))+".csv"
+        pickle.dump(self, open(path, "wb"))
 
     # def isL2(self, data, charging_threshold):
     #     #L2 should indicate spikier data, which should lead to fewer datapoints above charging_threshold
@@ -91,7 +110,7 @@ class PredictorControlStatistical(Predictor):
                     car_consumption = self.blocks_per_day*cars
                     charging_thresholds[day] = utilities.threshold_for_sum_above(today, car_consumption)
                     blocks_above += list(today > charging_thresholds[day]).count(True)
-                is_L2 = blocks_above/cars > self.l2_threshold
+                is_L2 = blocks_above/cars > self.l2_threshold   #TODO: divide by cars-i instead of by cars and re-tune the threshold
                 if is_L2: households.at[index, "L2"] += 1
                 else: households.at[index, "L1"] += 1
                 power = 6600 if is_L2 else 1920
@@ -108,4 +127,6 @@ class PredictorControlStatistical(Predictor):
                         combined.at[sorted.index[j], index] -= power #Decrease the power available to the next car
                         car_consumption -= power    #Decrease the power needed to charge this car
                         j += 1  #Move to the next-highest timeslot
+        print("L1: "+str(households["L1"].sum()))
+        print("L2: "+str(households["L2"].sum()))
         return {"load": load, "households": households}

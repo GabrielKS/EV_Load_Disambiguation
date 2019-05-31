@@ -4,9 +4,10 @@ from abc import ABC, abstractmethod
 class Predictor(ABC):
     trained = False
 
+    @classmethod
     @abstractmethod
-    def load(self, path):
-        trained = True  #May want to modify this behavior
+    def load(cls, path):
+        pass    #Should return a Predictor loaded from the file at path
 
     @abstractmethod
     def train(self, params, combined, load, households):
@@ -18,5 +19,5 @@ class Predictor(ABC):
         # Should return {"load": loadPrediction, "households": householdPrediction}
 
     @abstractmethod
-    def save(self):
+    def save(self, path):
         assert self.trained, "Predictor is not trained."    #May want to modify this behavior
