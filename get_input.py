@@ -3,6 +3,8 @@ import numpy as np
 import random
 from collections import OrderedDict
 
+# Uses input data from https://data.nrel.gov/submissions/69, converted to CSV.
+
 # "combined": The combination of the EV load and the baseline power consumption. The input.
 # "load": The EV load. Output 1.
 # "households": The household-to-vehicle map. Output 2.

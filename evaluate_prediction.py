@@ -3,12 +3,16 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 import random
 import numpy as np
+import ruptures as rpt
+
+import predictor_change_point
 import predictor_control_statistical
 import predictor_statistical_composite
 import predictor_statistical_daily
 import predictor_zero
 
 split = .25
+get_input.verbose = True
 
 n_vehicles = len(pd.read_csv("raw_data/vehicles.csv"))
 n_L1 = n_vehicles * 0.75 * 0.3
@@ -21,10 +25,8 @@ def get_train_test(split):
     seed = 1000
     random.seed(a=seed)
     np.random.seed(seed)
-    get_input.verbose = True
     train = get_input.get_data(n_L1, d_L1, n_L2, d_L2, timestep, 0)
     test = get_input.get_data(n_L1, d_L1, n_L2, d_L2, timestep, 1)
-    get_input.verbose = False
 
     households = train["households"]["Household"]
     training_households, testing_households = train_test_split(households, test_size=split)
@@ -41,6 +43,16 @@ def get_train_test(split):
 def rmse_2d(a, b):
     return ((b-a) ** 2).mean().mean() ** 0.5
 
+def precision_and_recall(actual, predicted):
+    predicted_bool = predicted.gt(0)
+    actual_bool = actual.gt(0)
+    true_positives = len(predicted_bool[predicted_bool & actual_bool].stack())
+    predicted_positives = len(predicted_bool[predicted_bool].stack())
+    actual_positives = len(actual_bool[actual_bool].stack())
+    precision = true_positives/predicted_positives if predicted_positives != 0 else float("NaN")
+    recall = true_positives/actual_positives if actual_positives != 0 else float("NaN")
+    return precision, recall
+
 def evaluate_prediction(predictor, data):
     print("Results for "+type(predictor).__name__+":")
     data = data.copy()
@@ -52,11 +64,15 @@ def evaluate_prediction(predictor, data):
 
     load_RMSE = rmse_2d(data["load"], prediction["load"])
     households_RMSE = rmse_2d(data["households"], prediction["households"])
-    print("\tLoad RMSE: "+str(round(load_RMSE, 2)))
-    print("\tHousehold RMSE: "+str(round(households_RMSE, 3)))
+    load_precision, load_recall = precision_and_recall(data["load"], prediction["load"])
+    households_precision, households_recall = precision_and_recall(data["households"], prediction["households"])
+    print("\tLoad RMSE: \t\t"+str(round(load_RMSE, 2)))
+    print("\tHousehold RMSE: \t"+str(round(households_RMSE, 3)))
+    print("\tLoad p&r: \t\t"+str(round(load_precision, 3))+", "+str(round(load_recall, 3)))
+    print("\tHousehold p&r: \t\t"+str(round(households_precision, 3))+", "+str(round(households_recall, 3)))
 
 def create_all_predictors():
-    # return [predictor_statistical_composite.PredictorStatisticalComposite(1-split, 30)]
+    # return [predictor_change_point.PredictorChangePoint(rpt.Binseg, "l1")]
     return [predictor_zero.PredictorZero(), predictor_statistical_composite.PredictorStatisticalComposite(1-split, 30), predictor_statistical_daily.PredictorStatisticalDaily(1-split, 30), predictor_control_statistical.PredictorControlStatistical(1-split, 30)]
 
 def testSaveLoad(predictors):

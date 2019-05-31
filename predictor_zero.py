@@ -10,7 +10,7 @@ class PredictorZero(Predictor):
         return PredictorZero()  #No state to load, so we just return a new one
 
     def train(self, params, combined, load, households):
-        pass
+        pass    #Nothing to train
 
     def save(self, path):
         pass    #No state to save

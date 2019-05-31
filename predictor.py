@@ -2,8 +2,6 @@ from abc import ABC, abstractmethod
 
 
 class Predictor(ABC):
-    trained = False
-
     @classmethod
     @abstractmethod
     def load(cls, path):
@@ -11,13 +9,12 @@ class Predictor(ABC):
 
     @abstractmethod
     def train(self, params, combined, load, households):
-        trained = True
+        pass    #Should train the Predictor
 
     @abstractmethod
     def predict(self, params, combined):
-        assert self.trained, "Predictor is not trained."
-        # Should return {"load": loadPrediction, "households": householdPrediction}
+        pass    # Should return {"load": loadPrediction, "households": householdPrediction}
 
     @abstractmethod
     def save(self, path):
-        assert self.trained, "Predictor is not trained."    #May want to modify this behavior
+        pass    #Should save the Predictor to a file at path
