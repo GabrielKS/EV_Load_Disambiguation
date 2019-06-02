@@ -40,7 +40,7 @@ class PredictorStatisticalComposite(Predictor):
         self.baselines = composite
 
         self.helper.train(params, combined.add(self.baselines, axis="index"), load, households)    #May have to modify later if PredictorControlStatistical.train gets more complicated
-        self.helper.l2_threshold = 79.5   #It seems like this threshold should be lower than the one in predictor_control_statistical, so I'm not sure why tuning for the n_L1/n_L2 ratio gets it to be higher.
+        self.helper.l2_threshold = 3482   #It seems like this threshold should be lower than the one in predictor_control_statistical, so I'm not sure why tuning for the n_L1/n_L2 ratio gets it to be higher.
 
     def save(self, path):
         pickle.dump(self, open(path, "wb"))

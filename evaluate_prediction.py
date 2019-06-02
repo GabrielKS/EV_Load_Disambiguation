@@ -73,7 +73,7 @@ def evaluate_prediction(predictor, data):
 
 def create_all_predictors():
     # return [predictor_change_point.PredictorChangePoint(rpt.Binseg, "l1")]
-    return [predictor_zero.PredictorZero(), predictor_statistical_composite.PredictorStatisticalComposite(1-split, 30), predictor_statistical_daily.PredictorStatisticalDaily(1-split, 30), predictor_control_statistical.PredictorControlStatistical(1-split, 30)]
+    return [predictor_zero.PredictorZero(), predictor_statistical_composite.PredictorStatisticalComposite(split, 30), predictor_statistical_daily.PredictorStatisticalDaily(split, 30), predictor_control_statistical.PredictorControlStatistical(split, 30)]
 
 def testSaveLoad(predictors):
     for predictor in predictors:
@@ -91,7 +91,7 @@ def main():
     testSaveLoad(predictors)
     print("evaluating…")
     for predictor in predictors:
-        evaluate_prediction(predictor, train)
+        evaluate_prediction(predictor, test)
 
 if __name__ == "__main__":
     main()

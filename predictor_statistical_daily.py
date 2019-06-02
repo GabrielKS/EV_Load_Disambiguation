@@ -1,6 +1,5 @@
 import pickle
 
-import pandas as pd
 from predictor import Predictor
 from predictor_control_statistical import PredictorControlStatistical
 
@@ -19,7 +18,7 @@ class PredictorStatisticalDaily(Predictor):
         baseline_load = combined-load
         self.baselines = baseline_load.mean(axis="columns")
         self.helper.train(params, combined.add(self.baselines, axis="index"), load, households)    #May have to modify later if PredictorControlStatistical.train gets more complicated
-        self.helper.l2_threshold = 84   #It seems like this threshold should be lower than the one in predictor_control_statistical, so I'm not sure why tuning for the n_L1/n_L2 ratio gets it to be higher.
+        self.helper.l2_threshold = 3585   #It seems like this threshold should be lower than the one in predictor_control_statistical, so I'm not sure why tuning for the n_L1/n_L2 ratio gets it to be higher.
 
     def save(self, path):
         pickle.dump(self, open(path, "wb"))

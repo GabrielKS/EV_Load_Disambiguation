@@ -22,7 +22,7 @@ class PredictorControlStatistical(Predictor):
     def train(self, params, combined, load, households):
         watts_per_car = load.mean(axis="rows").sum()/(params["vehicles_L1"]+params["vehicles_L2"])
         self.blocks_per_day = watts_per_car*1440/self.period
-        #I'll have to reverse the probability math to get fraction_one_car from households:
+        #I reversed the probability math (in predict()) to get fraction_one_car from households:
         self.cars_L1 = params["vehicles_L1"]*self.subset
         self.cars_L2 = params["vehicles_L2"]*self.subset
         cars_total = params["vehicles_total"]*self.subset
@@ -38,10 +38,10 @@ class PredictorControlStatistical(Predictor):
                      (-c*(3*e**2-4*e+1)*e+6*e**3-6*e**2+o1)/(e**2*(3*e-2)),
                      -(c*(e-1)**2*e-2*e**3+3*e**2+o1-1)/((e-1)*e**2)]
         # print(fractions)
-        #For some reason only the second line is working right now. Ideally all four lines would work and I could take a weighted average.
+        #For some reason only the second item of fractions is working right now. Ideally all four lines would work and I could take a (weighted?) average, but I must have made a math error somewhere.
         self.fraction_one_car = fractions[1]
         #Not immediately apparent how to get l2_threshold besides actually training. So I trained it manually, trying to get n_L1/n_L2 as close as possible to 0.5.
-        self.l2_threshold = 78
+        self.l2_threshold = 3337
 
     def save(self, path):   #"predictor_control_statistical_"+str(round(self.cars_L1, 3))+"_"+str(round(self.cars_L2, 3))+".csv"
         pickle.dump(self, open(path, "wb"))
@@ -98,6 +98,7 @@ class PredictorControlStatistical(Predictor):
         load = pd.DataFrame(float(0), index=combined.index, columns=combined.columns)
 
         for index, row in households.iterrows():
+            # print(index)    #Progress bar
             cars = 0    #Assume that the households that consume the least have zero EVs and that it increases from there (such that the houses that consume the most have three)
             if watts_per_household.index.get_loc(index) >= zero_EVs: cars += 1
             if watts_per_household.index.get_loc(index) >= zero_EVs+one_EV: cars += 1
@@ -105,7 +106,7 @@ class PredictorControlStatistical(Predictor):
             for i in range(0, cars):
                 charging_thresholds = {}
                 blocks_above = 0
-                for day in pd.date_range(start="2010-01-01 00:00:00", end="2010-01-08 00:00:00", freq="D"):
+                for day in pd.date_range(start="2010-01-01 00:00:00", end="2010-12-31 23:00:00", freq="D"): #TODO: stop hardcoding these dates. For most of my testing, I had the end date very wrong (January 8).
                     today = combined[index].loc[day:day+pd.DateOffset(days=1, minutes=-self.period)]
                     car_consumption = self.blocks_per_day*cars
                     charging_thresholds[day] = utilities.threshold_for_sum_above(today, car_consumption)
@@ -114,7 +115,7 @@ class PredictorControlStatistical(Predictor):
                 if is_L2: households.at[index, "L2"] += 1
                 else: households.at[index, "L1"] += 1
                 power = 6600 if is_L2 else 1920
-                for day in pd.date_range(start="2010-01-01 00:00:00", end="2010-01-08 00:00:00", freq="D"):
+                for day in pd.date_range(start="2010-01-01 00:00:00", end="2010-12-31 23:00:00", freq="D"):
                     today = combined[index].loc[day:day+pd.DateOffset(days=1, minutes=-self.period)]
                     sorted = today.sort_values(ascending=False)
                     car_consumption = self.blocks_per_day*cars

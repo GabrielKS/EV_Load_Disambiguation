@@ -1,8 +1,10 @@
 import matplotlib.pyplot as plt
 import pandas as pd
 import evaluate_prediction
+from pandas.plotting import register_matplotlib_converters
 
 f = 1
+register_matplotlib_converters()
 
 def resample_and_extend(data, freq):
     data = data.resample(freq).mean()
@@ -18,17 +20,25 @@ def cyclical_moving_average(data, freq, window):
 def averages():
     global f
     train, test = evaluate_prediction.get_train_test(.25)
-    combined = train["combined"].mean(axis="columns")
+    baseline = (train["combined"]-train["load"]).mean(axis="columns")[:500]
+    plt.figure(f)
+    f += 1
+    plt.plot(baseline.index, baseline)
+
+def smoothed():
+    global f
+    train, test = evaluate_prediction.get_train_test(.25)
+    baseline = (train["combined"]-train["load"]).mean(axis="columns")
 
     #Seasonal trends:
-    daily = combined.resample("d").mean()
-    seasonal = cyclical_moving_average(combined, "d", 14)
+    daily = baseline.resample("d").mean()
+    seasonal = cyclical_moving_average(baseline, "d", 14)
     plt.figure(f)
     f += 1
     plt.plot(daily.index, daily, seasonal.index, seasonal)
 
     #Hourly trends:
-    hourly = combined.groupby(combined.index.hour).mean()
+    hourly = baseline.groupby(baseline.index.hour).mean()
     plt.figure(f)
     f += 1
     plt.plot(hourly.index, hourly)
@@ -39,7 +49,7 @@ def averages():
         composite.loc[time] = (composite.loc[time]+hourly.loc[time.hour])/2
     plt.figure(f)
     f += 1
-    plt.plot(combined.index, combined, composite.index, composite)
+    plt.plot(baseline.index, baseline, composite.index, composite)
 
     #TODO: Trends in each hour across seasons
 
@@ -73,7 +83,8 @@ def differences():
     plt.axhline(y=-6600)
 
 def main():
-    # averages()
+    averages()
+    smoothed()
     household_with_EVs()
     differences()
     plt.show()
