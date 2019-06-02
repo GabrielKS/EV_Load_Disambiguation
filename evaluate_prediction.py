@@ -77,7 +77,7 @@ def create_all_predictors():
 
 def testSaveLoad(predictors):
     for predictor in predictors:
-        filename = type(predictor).__name__+"_"+get_input.path_from(n_L1, d_L1, timestep, 0)+".csv"
+        filename = type(predictor).__name__+"_"+get_input.path_from(n_L1, d_L1, timestep, 0)+".pickle"
         predictor.save(filename)
         predictor = predictor.load(filename)
 
