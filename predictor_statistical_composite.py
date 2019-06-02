@@ -39,7 +39,7 @@ class PredictorStatisticalComposite(Predictor):
         composite = composite.resample(str(self.period)+"min").ffill().iloc[:-1]    #Resample to our desired frequency and get rid of the extra day we added
         self.baselines = composite
 
-        self.helper.train(params, combined.add(self.baselines, axis="index"), load, households)    #May have to modify later if PredictorControlStatistical.train gets more complicated
+        self.helper.train(params, combined.sub(self.baselines, axis="index"), load, households)    #May have to modify later if PredictorControlStatistical.train gets more complicated
         self.helper.l2_threshold = 3482   #It seems like this threshold should be lower than the one in predictor_control_statistical, so I'm not sure why tuning for the n_L1/n_L2 ratio gets it to be higher.
 
     def save(self, path):

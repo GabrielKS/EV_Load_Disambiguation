@@ -53,6 +53,7 @@ class PredictorControlStatistical(Predictor):
     #     return len(data[data > charging_threshold]) > l2_threshold
 
     def predict(self, params, combined):
+        combined = combined.copy(deep=True) #So that the modification we make to combined within the innermost loop doesn't cause problems when we reuse the test data for other predictions. This bug was somewhat tricky to catch.
         cars_L1 = params["vehicles_L1"]*self.subset
         cars_L2 = params["vehicles_L2"]*self.subset
         cars_total = params["vehicles_total"]*self.subset
